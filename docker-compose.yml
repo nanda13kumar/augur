@@ -1,0 +1,50 @@
+# ═════════════════════════════════════════════════════════════════════════════
+#  Augur — run the ENTIRE stack (backend + frontend) with ONE command:
+#
+#      docker compose up --build
+#
+#  Then open  http://localhost:${FRONTEND_PORT}   (default http://localhost:3100)
+#
+#  All ports and the Prometheus connection are controlled from the root .env
+#  file (copy .env.example → .env). No code changes are ever required to change
+#  ports or point at a live Prometheus.
+# ═════════════════════════════════════════════════════════════════════════════
+services:
+  backend:
+    build: ./backend
+    container_name: augur-backend
+    environment:
+      BACKEND_PORT: ${BACKEND_PORT:-8100}
+      DATA_MODE: ${DATA_MODE:-auto}
+      PROMETHEUS_URL: ${PROMETHEUS_URL:-}
+      PROMETHEUS_USERNAME: ${PROMETHEUS_USERNAME:-}
+      PROMETHEUS_PASSWORD: ${PROMETHEUS_PASSWORD:-}
+      PROMETHEUS_BEARER_TOKEN: ${PROMETHEUS_BEARER_TOKEN:-}
+      DISCOVERY_REFRESH_SECONDS: ${DISCOVERY_REFRESH_SECONDS:-60}
+      PROPHET_ENABLED: ${PROPHET_ENABLED:-true}
+      DEFAULT_WINDOW_DAYS: ${DEFAULT_WINDOW_DAYS:-30}
+    expose:
+      - "${BACKEND_PORT:-8100}"
+    ports:
+      # Exposed for direct API access / Swagger at /docs (optional)
+      - "${BACKEND_PORT:-8100}:${BACKEND_PORT:-8100}"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:${BACKEND_PORT:-8100}/api/v1/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
+    restart: unless-stopped
+
+  frontend:
+    build: ./frontend
+    container_name: augur-frontend
+    depends_on:
+      - backend
+    environment:
+      FRONTEND_PORT: ${FRONTEND_PORT:-3100}
+      BACKEND_HOST: backend
+      BACKEND_PORT: ${BACKEND_PORT:-8100}
+    ports:
+      - "${FRONTEND_PORT:-3100}:${FRONTEND_PORT:-3100}"
+    restart: unless-stopped

@@ -1,0 +1,19 @@
+# Augur backend dependencies
+# ===========================
+# Core API
+fastapi==0.115.0
+uvicorn[standard]==0.30.6
+pydantic==2.9.2
+pydantic-settings==2.5.2
+
+# Data + HTTP
+pandas==2.2.2
+numpy==1.26.4
+httpx==0.27.2
+loguru==0.7.2
+
+# Forecasting (PRIMARY detector).
+# Prophet pulls in a Stan backend that can be slow/fiddly to build on some
+# platforms. Augur degrades gracefully to a statistical detector if Prophet
+# is unavailable, so the system still runs even if this line is removed.
+# prophet==1.1.6
